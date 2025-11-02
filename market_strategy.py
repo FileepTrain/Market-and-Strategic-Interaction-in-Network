@@ -1,6 +1,6 @@
 import networkx as nx
 import argparse
-#from vis_bipartite_graph import draw_graph
+from vis_bipartite_graph import draw_graph
 import matplotlib.pyplot as plt
 
 # File Handeling Funcitons
@@ -114,7 +114,8 @@ def main():
         parser.error("graph has no edges")
     
     if args.plot:
-        print("\nPlot")
+        print("\nPlotting bipartite graph...")
+        draw_graph(G, title="Initial Bipartite Market Graph")
     
     if args.interactive:
         print("\nInteractive")
