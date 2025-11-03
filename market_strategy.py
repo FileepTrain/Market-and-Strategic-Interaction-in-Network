@@ -1,6 +1,7 @@
 import networkx as nx
 import argparse
 from vis_bipartite_graph import draw_graph
+from market_clearing_alg import  run_interactive_clearing
 import matplotlib.pyplot as plt
 
 # File Handeling Funcitons
@@ -118,7 +119,14 @@ def main():
         draw_graph(G, title="Initial Bipartite Market Graph")
     
     if args.interactive:
-        print("\nInteractive")
-
+    # one call does everything: prints, prompts, price updates, recompute loop
+        run_interactive_clearing(
+            G,
+            price_step=1.0,
+            ask_each_round=True,
+            max_rounds=200,
+            plot=args.plot,   # will highlight preferred edges each round if --plot
+        )
+        
 if __name__ == "__main__":
     main()
