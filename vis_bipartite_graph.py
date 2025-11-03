@@ -66,12 +66,26 @@ def draw_edge_valuations(ax, G, pos):
     nx.draw_networkx_edge_labels(G, pos, edge_labels=labels,
                                  font_size=8, label_pos=0.75, rotate=False, ax=ax)
 
-def draw_prices(ax, pos, sellers, G, dx=-0.22):
-    """Draw price text to the LEFT of each seller."""
-    for s in sellers:
-        price = fmt_num(G.nodes[s].get("price", 0))
+def draw_prices(ax, pos, sellers, G, prices_override=None, dx=-0.22):
+    """
+    Draw price text to the LEFT of each seller.
+    If prices_override is provided, it must align with sellers order (list),
+    or be a dict {seller_id: price}.
+    """
+    # normalize override to a list aligned with sellers
+    if prices_override is None:
+        aligned = [G.nodes[s].get("price", 0) for s in sellers]
+    elif isinstance(prices_override, dict):
+        aligned = [prices_override.get(s, 0) for s in sellers]
+    else:
+        if len(prices_override) != len(sellers):
+            raise ValueError("Length of prices_override must match number of sellers.")
+        aligned = list(prices_override)
+
+    for s, p in zip(sellers, aligned):
         x, y = pos[s]
-        ax.text(x + dx, y, price, fontsize=8, ha="right", va="center", color="black")
+        ax.text(x + dx, y, fmt_num(p), fontsize=8, ha="right", va="center", color="black")
+
 
 def draw_payoff_vectors(ax, pos, buyers, sellers, G=None,
                         payoff_provider=None, payoffs_override=None, dx=0.22):

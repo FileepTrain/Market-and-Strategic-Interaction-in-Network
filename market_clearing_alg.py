@@ -1,6 +1,5 @@
 import math
 import networkx as nx
-import matplotlib as plt
 from vis_bipartite_graph import draw_graph
 
 
@@ -457,7 +456,7 @@ def run_interactive_clearing(
                 draw_graph(
                     G,
                     title="Final Market Equilibrium",
-                    highlight_edges=list(M),
+                    highlight_edges=list(P.edges()),
                     seller_prices=[prices[s] for s in sellers],
                     buyer_payoffs=payoffs,
                 )
@@ -486,7 +485,7 @@ def run_interactive_clearing(
             draw_graph(
                 G,
                 title=f"Market Clearing – Round {r}",
-                highlight_edges=list(M),
+                highlight_edges=list(P.edges()),
                 seller_prices=[prices[s] for s in sellers],
                 buyer_payoffs=payoffs,
             )
@@ -516,7 +515,7 @@ def run_interactive_clearing(
         draw_graph(
                     G,
                     title="Final Market: Constricted Set",
-                    highlight_edges=list(M),
+                    highlight_edges=list(P.edges()),
                     seller_prices=[prices[s] for s in sellers],
                     buyer_payoffs=payoffs,
                 )
