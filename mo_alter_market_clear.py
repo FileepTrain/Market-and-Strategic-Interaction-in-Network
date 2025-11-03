@@ -30,6 +30,25 @@ def edge_valuation(G, b, s):
         return None
     return float(data["valuation"])
 
+def get_valuations(G):
+    """
+    Returns the valuation matrix (buyers × sellers) as a 2D list of numbers.
+    Each entry [i][j] = valuation of buyer[i] for seller[j].
+    Missing edges are treated as 0.
+    """
+    sellers, buyers = get_parts(G)
+
+    valuations = []
+    for b in buyers:
+        row = []
+        for s in sellers:
+            if G.has_edge(s, b):
+                row.append(G.edges[s, b]["valuation"])
+            else:
+                row.append(0)
+        valuations.append(row)
+    return valuations
+
 def get_prices(G, sellers):
     """Return dict seller->price (float, default 0)."""
     return {s: float(G.nodes[s].get("price", 0)) for s in sellers}

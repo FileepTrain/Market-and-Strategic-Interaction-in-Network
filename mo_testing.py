@@ -1,7 +1,7 @@
 import networkx as nx
 import argparse
 from mo_alter_vis_bi import draw_graph
-from mo_alter_market_clear import  run_interactive_clearing, run_clearing_until_equilibrium
+from mo_alter_market_clear import  run_interactive_clearing, run_clearing_until_equilibrium, get_valuations
 import matplotlib.pyplot as plt
 
 # File Handeling Funcitons
@@ -116,7 +116,8 @@ def main():
     
     if args.plot:
         print("\nPlotting bipartite graph...")
-        draw_graph(G, title="Initial Bipartite Market Graph")
+        valuations = get_valuations(G)
+        draw_graph(G, title="Initial Bipartite Market Graph", buyer_payoffs=valuations)
 
     
     if args.interactive:
