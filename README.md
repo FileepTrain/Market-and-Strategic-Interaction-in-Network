@@ -31,10 +31,13 @@ Both functions require reading the graphs, finding the seller's prices, finding 
 
 - '--plot': The purpose of this function is to visualize the graph. In class, we redrew multiple graphs each time we had to update the seller's price. This function is supposed to show that visualization.
     --plot can be broken into 2 parts:
+
         1. Finding the payoffs and drawing the sets
             run_clearing_until_equilibrium: returns the end seller's prices, the buyer's payoffs, and a list of edges connecting buyers and sellers
+
         2. Drawing the graph to reflect the information
             draw_graph: uses the information passed in run_clearing_until_equilibrium to show in a bipartite graph
 
 - '--interactive': The purpose of this function is to show the proof behind the result of the final graph. This is similiar to the calculations and work we did in class for examples.
+
     --interactive is similiar to --plot because it does show the seller's prices, the buyer's payoffs, and the edges list. However, instead of giving the end result, it prints out the calculations and asks the user if they wish to continue.
