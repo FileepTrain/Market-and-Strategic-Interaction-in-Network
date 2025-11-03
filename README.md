@@ -16,15 +16,15 @@ Following functions fall under the OPTIONS category, and below details the retur
 
 ## Sample Command-Line Usage
     python market_strategy.py market.gml --plot
-["/Final_plot_1.png"]  [Final_plot_2.png]
+![Program Output](Final_plot_1.png)  ![Program Output](Final_plot_2.png)
     
     python market_startegy.py market.gml --interactive
-    [Final_inter_1.png]     [Final_inter_2.png]
-    [Final_inter_3.png]     [Final_inter_3.png]
+![Program Output](Final_inter_1.png)     ![Program Output](Final_inter_2.png)
+![Program Output](Final_inter_3.png)     ![Program Output](Final_inter_4.png)
     
     python market_strategy.py market.gml --plot --interactive
-    [Final_plot_inter_1.png]    [Final_plot_inter_2.png]
-    [Final_plot_inter_3.png]    [Final_plot_inter_4.png]
+![Program Output](Final_plot_inter_1.png)    ![Program Output](Final_plot_inter_2.png)
+![Program Output](Final_plot_inter_3.png)    ![Program Output](Final_plot_inter_4.png)
 
 ## Explaination of Approach
 Both functions require reading the graphs, finding the seller's prices, finding the buyer's valuations, and turning this into a matrix (2D array) to make it easier to track and find each buyer's preferred match.
