@@ -16,7 +16,7 @@ Following functions fall under the OPTIONS category, and below details the retur
 
 ## Sample Command-Line Usage
     python market_strategy.py market.gml --plot
-    ![Alt text]("Final_plot_1.png")  [Final_plot_2.png]
+    ![Initial graph]("/Final_plot_1.png")  [Final_plot_2.png]
     
     python market_startegy.py market.gml --interactive
     [Final_inter_1.png]     [Final_inter_2.png]
