@@ -379,7 +379,7 @@ def run_clearing_until_equilibrium(
             print(f"  Buyer {b}: {row}")
 
     #Returns a list of the final prices, the 2D matrix of buyer payoffs, and the list of edges for a perfect match
-    return final_prices, payoffs_matrix, list(M)
+    return final_prices, payoffs_matrix, list(M), buyers
 
 # ======== NEW: interactive loop ========
 

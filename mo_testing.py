@@ -118,6 +118,9 @@ def main():
         print("\nPlotting bipartite graph...")
         valuations = get_valuations(G)
         draw_graph(G, title="Initial Bipartite Market Graph", buyer_payoffs=valuations)
+        if args.interactive is False:
+            final_prices, payoffs_matrix, final_edges, buyers = run_clearing_until_equilibrium(G)
+            draw_graph(G, title= "Final Bipartite Market Graph", highlight_edges=final_edges, seller_prices=final_prices, buyer_payoffs=payoffs_matrix)
 
     
     if args.interactive:
@@ -129,14 +132,14 @@ def main():
         max_rounds=1000,
         plot=args.plot,   # use --plot flag to control drawing
         )
-    else:
-        final_prices, payoffs_matrix, final_edges = run_clearing_until_equilibrium(G)
+    """else:
+        final_prices, payoffs_matrix, final_edges, buyers = run_clearing_until_equilibrium(G)
         print("\nFinal Prices:", final_prices)
         print("Final Payoffs (buyers × sellers):")
-        for b, row in payoffs_matrix:
+        for b, row in zip(buyers, payoffs_matrix):
             print(f"  Buyer {b}: {row}")
         draw_graph(G, title= "Final Bipartite Market Graph", highlight_edges=final_edges, seller_prices=final_prices, buyer_payoffs=payoffs_matrix)
-
+"""
         
 if __name__ == "__main__":
     main()

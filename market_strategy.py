@@ -1,7 +1,7 @@
 import networkx as nx
 import argparse
 from vis_bipartite_graph import draw_graph
-from market_clearing_alg import  run_interactive_clearing
+from market_clearing_alg import  run_interactive_clearing, get_valuations, run_clearing_until_equilibrium
 import matplotlib.pyplot as plt
 
 # File Handeling Funcitons
@@ -116,16 +116,21 @@ def main():
     
     if args.plot:
         print("\nPlotting bipartite graph...")
-        draw_graph(G, title="Initial Bipartite Market Graph")
+        valuations = get_valuations(G)
+        draw_graph(G, title="Initial Bipartite Market Graph", buyer_payoffs=valuations)
+        if args.interactive is False:
+            final_prices, payoffs_matrix, final_edges, buyers = run_clearing_until_equilibrium(G)
+            draw_graph(G, title= "Final Bipartite Market Graph", highlight_edges=final_edges, seller_prices=final_prices, buyer_payoffs=payoffs_matrix)
+
     
     if args.interactive:
     # one call does everything: prints, prompts, price updates, recompute loop
         run_interactive_clearing(
-            G,
-            price_step=1.0,
-            ask_each_round=True,
-            max_rounds=200,
-            plot=args.plot,   # will highlight preferred edges each round if --plot
+        G,
+        price_step=1.0,
+        ask_each_round=True,
+        max_rounds=1000,
+        plot=args.plot,   # use --plot flag to control drawing
         )
         
 if __name__ == "__main__":

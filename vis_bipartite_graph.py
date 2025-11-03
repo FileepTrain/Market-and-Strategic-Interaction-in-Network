@@ -73,16 +73,57 @@ def draw_prices(ax, pos, sellers, G, dx=-0.22):
         x, y = pos[s]
         ax.text(x + dx, y, price, fontsize=8, ha="right", va="center", color="black")
 
-def draw_payoff_vectors(ax, pos, buyers, sellers, payoff_provider, dx=0.22):
+def draw_payoff_vectors(ax, pos, buyers, sellers, G=None,
+                        payoff_provider=None, payoffs_override=None, dx=0.22):
     """
-    Draw payoff vector (comma-separated) to the RIGHT of each buyer.
-    payoff_provider(buyer, sellers_list) -> list of numbers/strings.
+    Draw payoff text to the RIGHT of each buyer.
+
+    Highlights the maximum payoff (ties included) in bold red.
+    Accepts either:
+      - payoffs_override: list aligned with buyers order OR dict {buyer_id: payoff_list}
+      - payoff_provider: callable(buyer, sellers)
     """
-    for b in buyers:
-        vec = payoff_provider(b, sellers)
-        text = ", ".join(fmt_num(v) for v in vec)
-        x, y = pos[b]
-        ax.text(x + dx, y, text, fontsize=8, ha="left", va="center", color="black")
+    for i, b in enumerate(buyers):
+        # Get payoff vector
+        if payoffs_override is not None:
+            if isinstance(payoffs_override, dict):
+                vec = payoffs_override.get(b, [0]*len(sellers))
+            else:
+                vec = payoffs_override[i]
+        elif payoff_provider is not None:
+            vec = payoff_provider(b, sellers)
+        else:
+            vec = [0]*len(sellers)
+
+        # Determine maxima
+        if isinstance(vec, (list, tuple)) and vec:
+            max_val = max(vec)
+            highlighted_indices = [j for j, v in enumerate(vec) if v == max_val and max_val != 0]
+
+            # Draw each payoff value inline with commas
+            x, y = pos[b]
+            offset = 0.0
+            for j, v in enumerate(vec):
+                s_val = fmt_num(v)
+                is_highlight = j in highlighted_indices
+                
+
+                # draw number
+                ax.text(x + dx + offset, y, s_val,
+                        fontsize=8, ha="left", va="center",
+                        color="crimson" if is_highlight else "black",
+                        fontweight="bold" if is_highlight else "normal")
+
+                # move right a little
+                offset += 0.05
+
+        else:
+            # Single or empty payoff
+            x, y = pos[b]
+            ax.text(x + dx, y, fmt_num(vec), fontsize=8,
+                    ha="left", va="center", color="black")
+
+    
 
 def draw_headers(ax, pos, x_left=0.0, x_right=1.0,
                  label_price="Price", label_sellers="Sellers",
@@ -100,16 +141,34 @@ def draw_headers(ax, pos, x_left=0.0, x_right=1.0,
     ax.text(x_right + payoffs_dx, y_top, label_payoffs, fontsize=11, fontweight="bold",
             ha="left", va="bottom", color="black")
 
+
 def pad_axes(ax, pos, x_left=0.0, x_right=1.0, pad_x=0.35, pad_top=1.2, pad_bottom=0.5):
     """Pad x/y limits so side annotations aren’t clipped."""
     y_vals = [y for _, y in pos.values()]
     ax.set_xlim(x_left - pad_x, x_right + pad_x)
     ax.set_ylim(min(y_vals) - pad_bottom, max(y_vals) + pad_top)
 
+def _normalize_prices(sellers, seller_prices):
+    """
+    Return a list of prices aligned to `sellers` order without mutating G.
+    Accepts either:
+      - list of prices (same length as sellers, already ordered), or
+      - dict {seller_id: price}
+    """
+    if seller_prices is None:
+        return None
+    if isinstance(seller_prices, dict):
+        return [seller_prices.get(s, 0) for s in sellers]
+    # assume list/tuple
+    if len(seller_prices) != len(sellers):
+        raise ValueError("Length of seller_prices must match number of sellers.")
+    return list(seller_prices)
+
+
 # ---------- public API ----------
 
 def draw_graph(G, title="Bipartite Market Graph", highlight_edges=None,
-               payoff_provider=None):
+               payoff_provider=None, seller_prices=None, buyer_payoffs=None):
     """
     Draw a bipartite market graph with side prices (left) and payoff vectors (right).
 
@@ -121,9 +180,19 @@ def draw_graph(G, title="Bipartite Market Graph", highlight_edges=None,
         Edges to highlight (e.g., preferred or matched).
     payoff_provider : callable(buyer:str, sellers:list[str]) -> list
         Returns payoff vector for a buyer aligned with sellers. If None, zeros are used.
+    seller_prices: list|dict|None
+        If list, it must align with the visual seller order.
+        If dict, keys are seller IDs; values are prices.
+        This does NOT mutate G; it's just for display.
+    buyer_prices: 2D array|None
+        Must be a 2D array with rows for buyers (in order) and col for sellers (in order)
+    
     """
     sellers, buyers = get_parts(G)
     pos = make_positions(sellers, buyers, x_left=0.0, x_right=1.0)
+
+    # normalize input prices
+    prices_aligned = _normalize_prices(sellers, seller_prices)
 
     fig, ax = plt.subplots(figsize=(10, 6))
     fig.suptitle(title, fontsize=14, fontweight="bold", y=0.99)
@@ -133,13 +202,17 @@ def draw_graph(G, title="Bipartite Market Graph", highlight_edges=None,
     draw_edges(ax, G, pos, highlight_edges=highlight_edges)
     draw_edge_valuations(ax, G, pos)
 
-    # left: prices; right: payoff vectors
-    draw_prices(ax, pos, sellers, G, dx=-0.22)
+    # left side: seller prices
+    draw_prices(ax, pos, sellers, G=G, prices_override=prices_aligned, dx=-0.22)
 
-    if payoff_provider is None:
-        # default: zero vector with length = #sellers
-        payoff_provider = lambda b, S: [0] * len(S)
-    draw_payoff_vectors(ax, pos, buyers, sellers, payoff_provider, dx=0.22)
+    # right side: buyer payoffs
+    draw_payoff_vectors(
+        ax, pos, buyers, sellers,
+        G=G,
+        payoff_provider=payoff_provider,
+        payoffs_override=buyer_payoffs,  # <-- this line fixes it
+        dx=0.22
+    )
 
     draw_headers(ax, pos, x_left=0.0, x_right=1.0,
                  label_price="Price", label_sellers="Sellers",
@@ -147,7 +220,6 @@ def draw_graph(G, title="Bipartite Market Graph", highlight_edges=None,
                  price_dx=-0.22, payoffs_dx=0.22)
 
     pad_axes(ax, pos, x_left=0.0, x_right=1.0, pad_x=0.35, pad_top=1.2, pad_bottom=0.5)
-
     ax.axis("off")
     plt.tight_layout()
     plt.show()
