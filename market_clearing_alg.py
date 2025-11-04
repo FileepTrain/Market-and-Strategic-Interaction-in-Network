@@ -1,5 +1,6 @@
 import math
 import networkx as nx
+import matplotlib.pyplot as plt
 from vis_bipartite_graph import draw_graph
 
 
@@ -16,18 +17,15 @@ def get_parts(G):
 
 def fmt(x):
     """Format numbers compactly; None -> '-'."""
-    if x is None:
-        return "-"
-    if isinstance(x, (int, float)) and math.isclose(x, round(x), abs_tol=1e-9):
-        return f"{int(round(x))}"
-    return f"{float(x):.2f}"
+    if x is None: return "-"
+    return str(int(round(float(x))))
 
 def edge_valuation(G, b, s):
-    """Return valuation on edge (b,s) (float) or None if no edge/attr."""
+    """Return valuation on edge (b,s) (int) or None if no edge/attr."""
     data = G.get_edge_data(b, s) or G.get_edge_data(s, b)
     if not data or "valuation" not in data:
         return None
-    return float(data["valuation"])
+    return int(data["valuation"])
 
 def get_valuations(G):
     """
@@ -49,8 +47,8 @@ def get_valuations(G):
     return valuations
 
 def get_prices(G, sellers):
-    """Return dict seller->price (float, default 0)."""
-    return {s: float(G.nodes[s].get("price", 0)) for s in sellers}
+    """Return dict seller->price (int, default 0)."""
+    return {s: int(G.nodes[s].get("price", 0)) for s in sellers}
 
 def build_valuation_matrix(G, buyers, sellers):
     """
@@ -70,7 +68,7 @@ def build_payoff_matrix(prices, val_rows, sellers):
     """
     rows = []
     for b, vals in val_rows:
-        pays = [None if v is None else (v - prices[sellers[j]]) for j, v in enumerate(vals)]
+        pays = [None if v is None else (v - int(prices[sellers[j]])) for j, v in enumerate(vals)]
         rows.append((b, pays))
     return rows
 
@@ -95,10 +93,11 @@ def dump_market_state(G):
     prices = get_prices(G, sellers)
     val_rows = build_valuation_matrix(G, buyers, sellers)
     pay_rows = build_payoff_matrix(prices, val_rows, sellers)
-
+    print("\n\n\n===================================================================================================")
     print("\n== Seller Prices ==")
     for s in sellers:
-        print(f"Seller {s}: price = {fmt(prices[s])}")
+        price_int = int(round(prices[s]))
+        print(f"Seller {s}: price = {price_int}")
 
     print_matrix("Valuations (buyer × seller)", buyers, sellers, val_rows)
     print_matrix("Payoffs = valuation − price(seller)", buyers, sellers, pay_rows)
@@ -110,8 +109,8 @@ def _utility(G, b, s):
     data = G.get_edge_data(b, s) or G.get_edge_data(s, b)
     if not data or "valuation" not in data:
         return None
-    val = float(data["valuation"])
-    price = float(G.nodes[s].get("price", 0))
+    val = int(data["valuation"])
+    price = int(G.nodes[s].get("price", 0))
     return val - price
 
 def build_preferred_graph(G):
@@ -155,7 +154,7 @@ def buyer_constricted_set_with_best(P, matching, sellers, buyers, G):
       - constricted_buyers: set of buyers reachable via alternating paths
       - best_options: dict buyer -> {
             'best_sellers': [seller ids],    # neighbors in P (ties allowed)
-            'best_utility': float            # u(b,s) for any s in best_sellers
+            'best_utility': int            # u(b,s) for any s in best_sellers
         }
     """
     matched_b = {b for (b, s) in matching}
@@ -212,7 +211,7 @@ def find_constricted_or_perfect(G):
         'preferred_edges': list[(b,s)],
         'matching': set[(b,s)],
         'constricted_buyers': set[str],         # empty if perfect
-        'best_options': dict[str, {'best_sellers': [...], 'best_utility': float or None}]
+        'best_options': dict[str, {'best_sellers': [...], 'best_utility': int or None}]
       }
     """
     sellers, buyers = get_parts(G)
@@ -248,7 +247,7 @@ def get_total_potential_energy(G):
     total = 0.0
     for u, v, data in G.edges(data=True):
         if "valuation" in data:
-            total += float(data["valuation"])
+            total += int(data["valuation"])
     return total
 
 
@@ -301,7 +300,7 @@ def _print_round(r, sellers, buyers, prices, matching, constr_b, constr_s, best_
 #Returns the perfect graph (not interactive)
 def run_clearing_until_equilibrium(
     G,
-    price_step: float = 1.0,
+    price_step: int = 1.0,
     max_rounds: int = 1000,
     verbose: bool = True,
     show_progress: bool = True,
@@ -332,12 +331,9 @@ def run_clearing_until_equilibrium(
         P = build_preferred_graph(G)
         M = maximum_matching(P, sellers, buyers)
         current_energy = sum(
-        max(0, G.edges[s, b]["valuation"] - float(G.nodes[s].get("price", 0.0)))
+        max(0, G.edges[s, b]["valuation"] - int(G.nodes[s].get("price", 0)))
             for s, b in G.edges()
         )
-        if verbose:
-            print(f"Current market energy: {current_energy:.2f}")
-
         if len(M) == len(sellers):
             #if verbose:
                 #print("Market cleared ✅")
@@ -352,10 +348,10 @@ def run_clearing_until_equilibrium(
 
         # Raise prices on constricted sellers
         for s in constr_s:
-            G.nodes[s]["price"] = float(G.nodes[s].get("price", 0.0)) + float(price_step)
-
+            G.nodes[s]["price"] = int(G.nodes[s].get("price", 0)) + int(price_step)
+            
     # --- Compute final outputs ---
-    final_prices = [float(G.nodes[s].get("price", 0.0)) for s in sellers]
+    final_prices = [int(G.nodes[s].get("price", 0)) for s in sellers]
     price_dict = dict(zip(sellers, final_prices))  # for quick lookup
 
     # Buyer payoffs matrix (valuation - final price)
@@ -384,7 +380,7 @@ def run_clearing_until_equilibrium(
 
 def run_interactive_clearing(
     G,
-    price_step: float = 1.0,
+    price_step: int = 1.0,
     ask_each_round: bool = True,
     max_rounds: int = 1000,
     plot: bool = True,
@@ -398,7 +394,8 @@ def run_interactive_clearing(
     All prints happen here. We print tables each round via dump_market_state(G).
     """
     sellers, buyers = get_parts(G)
-
+    prev_fig = None
+    
     def _best_options_for(b, P):
         # neighbors in P are exactly b's best sellers (ties allowed)
         best_sellers = sorted(list(P.neighbors(b)), key=int)
@@ -413,7 +410,7 @@ def run_interactive_clearing(
             for s in sellers:
                 if G.has_edge(s, b):
                     val = G.edges[s, b]["valuation"]
-                    price = float(G.nodes[s].get("price", 0.0))
+                    price = int(G.nodes[s].get("price", 0))
                     row.append(val - price)
                 else:
                     row.append(0)
@@ -430,7 +427,7 @@ def run_interactive_clearing(
         M = maximum_matching(P, sellers, buyers)
         r = r + 1
         current_energy = sum(
-            max(0, G.edges[s, b]["valuation"] - float(G.nodes[s].get("price", 0.0)))
+            max(0, G.edges[s, b]["valuation"] - int(G.nodes[s].get("price", 0)))
             for s, b in G.edges()
         )   
 
@@ -440,9 +437,6 @@ def run_interactive_clearing(
         # Also show current preferred edges and matching summary
         #Show the amount of potential energy left after each round
         print(f"\n--- Round {r} ---")
-        print(f"Current market energy: {current_energy:.2f}")
-        prices = get_prices(G, sellers)
-        print("Prices:", {s: prices[s] for s in sellers})
         print(f"Preferred edges: {sorted(list(P.edges()))}")
         print(f"Matching size: {len(M)} / {len(sellers)}")
         print(f"Matching pairs: {sorted(list(M))}")
@@ -452,14 +446,21 @@ def run_interactive_clearing(
             print("Market cleared ✅")
             # Draw final graph one last time
             if plot:
+                if prev_fig is not None:
+                    plt.close(prev_fig)
+                    
                 payoffs = _compute_payoffs()
-                draw_graph(
+                prices = get_prices(G, sellers)
+                prev_fig = draw_graph(
                     G,
                     title="Final Market Equilibrium",
-                    highlight_edges=list(P.edges()),
+                    highlight_edges=list(P.edges()),             # dashed red — preferred or current
+                    highlight_edges_green=list(M),               # solid green — final assignment
                     seller_prices=[prices[s] for s in sellers],
                     buyer_payoffs=payoffs,
-                )
+                )   
+            plt.ioff()
+            plt.show()
             return
 
         # Not perfect → compute constricted sets
@@ -481,8 +482,11 @@ def run_interactive_clearing(
 
         # Plot graph if requested
         if plot:
+            if prev_fig is not None:
+                plt.close(prev_fig)
             payoffs = _compute_payoffs()
-            draw_graph(
+            prices = get_prices(G, sellers)
+            prev_fig = draw_graph(
                 G,
                 title=f"Market Clearing – Round {r}",
                 highlight_edges=list(P.edges()),
@@ -493,7 +497,7 @@ def run_interactive_clearing(
         # Ask user before continuing
         if ask_each_round:
             try:
-                resp = input("Proceed to next round? [Enter = yes, q = quit] ").strip().lower()
+                resp = input("Proceed to next round? [Enter = yes, n/q = no] ").strip().lower()
             except EOFError:
                 resp = ""  # auto-continue if input not available
             if resp in {"q", "n", "no"}:
@@ -506,13 +510,16 @@ def run_interactive_clearing(
             return
 
         for s in constr_s:
-            G.nodes[s]["price"] = float(G.nodes[s].get("price", 0.0)) + float(price_step)
+            G.nodes[s]["price"] = int(G.nodes[s].get("price", 0)) + int(price_step)
     
     #Incase this is a constricted market, print statement that says so
     if current_energy < 0:
         print("This is a constricted market. The last graph is a constricted set")
+        if prev_fig is not None:
+            plt.close(prev_fig)
         payoffs = _compute_payoffs()
-        draw_graph(
+        prices = get_prices(G, sellers)
+        prev_fig = draw_graph(
                     G,
                     title="Final Market: Constricted Set",
                     highlight_edges=list(P.edges()),

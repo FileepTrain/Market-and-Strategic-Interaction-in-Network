@@ -4,6 +4,8 @@ from vis_bipartite_graph import draw_graph
 from market_clearing_alg import  run_interactive_clearing, get_valuations, run_clearing_until_equilibrium
 import matplotlib.pyplot as plt
 
+plt.ion()
+
 # File Handeling Funcitons
 # ====================================================================================================
 """To take in a graph .gml file, and check that the input ID values are ints
@@ -24,7 +26,7 @@ def load_gml(path: str):
     for node, data in G.nodes(data=True):
         for key, value in data.items():
             try:
-                float(value)
+                int(value)
             except Exception:
                 raise nx.NetworkXError(f"Node {node} has non-numeric attribute '{key}': {value}")
             
@@ -32,7 +34,7 @@ def load_gml(path: str):
     for u, v, data in G.edges(data=True):
         for key, value in data.items():
             try:
-                float(value)
+                int(value)
             except Exception:
                 raise nx.NetworkXError(f"Edge ({u},{v}) has non-numeric attribute '{key}': {value}")
             
@@ -113,18 +115,40 @@ def main():
         parser.error("graph has no nodes")
     if G.number_of_edges() == 0:
         parser.error("graph has no edges")
+        
+    fig = None
     
     if args.plot:
-        print("\nPlotting bipartite graph...")
         valuations = get_valuations(G)
-        draw_graph(G, title="Initial Bipartite Market Graph", buyer_payoffs=valuations)
-        if args.interactive is False:
-            final_prices, payoffs_matrix, final_edges, buyers = run_clearing_until_equilibrium(G)
-            draw_graph(G, title= "Final Bipartite Market Graph", highlight_edges=final_edges, seller_prices=final_prices, buyer_payoffs=payoffs_matrix)
+        if fig is not None:
+            plt.close(fig)
+        fig = draw_graph(G, title="Initial Bipartite Market Graph", buyer_payoffs=valuations)
+
+        try:
+            resp = input("\nProceed with INTERACTIVE clearing? [Enter = yes, n/q = no] ").strip().lower()
+        except EOFError:
+            resp = ""  # default to yes if stdin isn't interactive
+
+        if resp in {"", "y", "yes"}:
+            # Close the initial plot before starting the interactive loop
+            if fig is not None:
+                plt.close(fig)
+            run_interactive_clearing(
+                G,
+                price_step=1.0,
+                ask_each_round=True,
+                max_rounds=1000,
+                plot=True,           # keep plotting rounds
+            )
+            plt.ioff()
+            plt.show()
+            return
 
     
     if args.interactive:
     # one call does everything: prints, prompts, price updates, recompute loop
+        if fig is not None:
+            plt.close(fig) 
         run_interactive_clearing(
         G,
         price_step=1.0,

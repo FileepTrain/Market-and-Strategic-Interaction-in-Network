@@ -55,11 +55,17 @@ def draw_nodes(ax, G, pos, sellers, buyers):
     nx.draw_networkx_labels(G, pos, labels={n: n for n in sellers}, font_size=9, ax=ax)
     nx.draw_networkx_labels(G, pos, labels={n: n for n in buyers},  font_size=9, ax=ax)
 
-def draw_edges(ax, G, pos, highlight_edges=None):
+def draw_edges(ax, G, pos, highlight_edges=None, color="crimson", style="dashed", width=2.5):
     nx.draw_networkx_edges(G, pos, edge_color="gray", width=1.2, ax=ax)
     if highlight_edges:
-        nx.draw_networkx_edges(G, pos, edgelist=highlight_edges,
-                               edge_color="crimson", width=2.5, style="dashed", ax=ax)
+        nx.draw_networkx_edges(
+            G, pos,
+            edgelist=highlight_edges,
+            edge_color=color,
+            width=width,
+            style=style,
+            ax=ax
+        )
 
 def draw_edge_valuations(ax, G, pos):
     labels = collect_edge_labels(G)
@@ -181,8 +187,15 @@ def _normalize_prices(sellers, seller_prices):
 
 # ---------- public API ----------
 
-def draw_graph(G, title="Bipartite Market Graph", highlight_edges=None,
-               payoff_provider=None, seller_prices=None, buyer_payoffs=None):
+def draw_graph(
+    G,
+    title="Bipartite Market Graph",
+    highlight_edges=None,             # existing red dashed edges
+    highlight_edges_green=None,       # 🟩 new green solid edges
+    payoff_provider=None,
+    seller_prices=None,
+    buyer_payoffs=None
+):
     """
     Draw a bipartite market graph with side prices (left) and payoff vectors (right).
 
@@ -213,7 +226,8 @@ def draw_graph(G, title="Bipartite Market Graph", highlight_edges=None,
     fig.subplots_adjust(top=0.90)
 
     draw_nodes(ax, G, pos, sellers, buyers)
-    draw_edges(ax, G, pos, highlight_edges=highlight_edges)
+    draw_edges(ax, G, pos, highlight_edges=highlight_edges, color="crimson", style="dashed", width=2.5)
+    draw_edges(ax, G, pos, highlight_edges=highlight_edges_green, color="limegreen", style="solid", width=4)
     draw_edge_valuations(ax, G, pos)
 
     # left side: seller prices
@@ -236,4 +250,6 @@ def draw_graph(G, title="Bipartite Market Graph", highlight_edges=None,
     pad_axes(ax, pos, x_left=0.0, x_right=1.0, pad_x=0.35, pad_top=1.2, pad_bottom=0.5)
     ax.axis("off")
     plt.tight_layout()
-    plt.show()
+    plt.show(block=False)
+    plt.pause(0.001)
+    return fig
