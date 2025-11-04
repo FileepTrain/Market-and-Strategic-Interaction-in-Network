@@ -1,9 +1,9 @@
-# vis_bipartite_graph.py
 import math
 import networkx as nx
 import matplotlib.pyplot as plt
 
-# ---------- helpers: data & layout ----------
+# Helpers Data and Layout
+# ====================================================================================================
 
 def get_parts(G):
     """Return (sellers, buyers) as sorted lists of node IDs (strings)."""
@@ -45,7 +45,8 @@ def collect_edge_labels(G):
             labels[(u, v)] = fmt_num(data["valuation"])
     return labels
 
-# ---------- helpers: drawing primitives ----------
+# Helpers Draw Prinatives
+# ====================================================================================================
 
 def draw_nodes(ax, G, pos, sellers, buyers):
     nx.draw_networkx_nodes(G, pos, nodelist=sellers, node_color="#87CEFA",
@@ -55,8 +56,10 @@ def draw_nodes(ax, G, pos, sellers, buyers):
     nx.draw_networkx_labels(G, pos, labels={n: n for n in sellers}, font_size=9, ax=ax)
     nx.draw_networkx_labels(G, pos, labels={n: n for n in buyers},  font_size=9, ax=ax)
 
-def draw_edges(ax, G, pos, highlight_edges=None, color="crimson", style="dashed", width=2.5):
-    nx.draw_networkx_edges(G, pos, edge_color="gray", width=1.2, ax=ax)
+def draw_edges(ax, G, pos, highlight_edges=None, color="crimson",
+               style="dashed", width=2.5, draw_base=False):
+    if draw_base:
+        nx.draw_networkx_edges(G, pos, edge_color="gray", width=1.2, ax=ax)
     if highlight_edges:
         nx.draw_networkx_edges(
             G, pos,
@@ -185,7 +188,8 @@ def _normalize_prices(sellers, seller_prices):
     return list(seller_prices)
 
 
-# ---------- public API ----------
+# draw graph
+# ====================================================================================================
 
 def draw_graph(
     G,
@@ -211,8 +215,8 @@ def draw_graph(
         If list, it must align with the visual seller order.
         If dict, keys are seller IDs; values are prices.
         This does NOT mutate G; it's just for display.
-    buyer_prices: 2D array|None
-        Must be a 2D array with rows for buyers (in order) and col for sellers (in order)
+    buyer_payoffs: 2D array|None
+        Must be a 2D array with rows for buyers (in order) and columns for sellers (in order).
     
     """
     sellers, buyers = get_parts(G)
@@ -226,8 +230,8 @@ def draw_graph(
     fig.subplots_adjust(top=0.90)
 
     draw_nodes(ax, G, pos, sellers, buyers)
-    draw_edges(ax, G, pos, highlight_edges=highlight_edges, color="crimson", style="dashed", width=2.5)
-    draw_edges(ax, G, pos, highlight_edges=highlight_edges_green, color="limegreen", style="solid", width=4)
+    draw_edges(ax, G, pos, highlight_edges=highlight_edges,      color="crimson",   style="dashed", draw_base=True)
+    draw_edges(ax, G, pos, highlight_edges=highlight_edges_green, color="limegreen", style="solid",  width=4, draw_base=False)
     draw_edge_valuations(ax, G, pos)
 
     # left side: seller prices

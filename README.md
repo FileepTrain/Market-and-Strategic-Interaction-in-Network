@@ -10,21 +10,30 @@ There must be a .gml file in the current directory. We use market.gml, but you c
     python market_strategy.py market.gml [OPTION]
 
 Following functions fall under the OPTIONS category, and below details the return information for each function:
-- '--plot': this calls the function to plot the initial graph (when the sellers are at 0 and the buyers have their maximum payoff). It also prints the final, perfect graph or the final constricted set when the total potential energy is gone.
+- '--plot': this tells the program to show a visual of the market clearing. when called alone it simply prints the final, perfect graph or the final constricted set when the total potential energy is gone.
 
 - '--interactive': this allows the user to see in the terminal the buyer's payoffs and the constricted set for each round. If '--plot' is called, then each round is plotted.
 
+- [NULL]: if no additional arguments are given then the program just prints the final market clearing result to the terminal
+
 ## Sample Command-Line Usage
+    python market_strategy.py market.gml
+![Program Output](fin_term.png)
+    
     python market_strategy.py market.gml --plot
-![Program Output](Final_plot_1.png)  ![Program Output](Final_plot_2.png)
+![Program Output](fin_term.png)     ![Program Output](fin_plot.png)
     
     python market_startegy.py market.gml --interactive
-![Program Output](Final_inter_1.png)     ![Program Output](Final_inter_2.png)
-![Program Output](Final_inter_3.png)     ![Program Output](Final_inter_4.png)
+![Program Output](r1_term.png)     ![Program Output](r2_term.png)
+![Program Output](r3_term.png)     ![Program Output](fin_term.png)
     
     python market_strategy.py market.gml --plot --interactive
-![Program Output](Final_plot_inter_1.png)    ![Program Output](Final_plot_inter_2.png)
-![Program Output](Final_plot_inter_3.png)    ![Program Output](Final_plot_inter_4.png)
+![Program Output](r1_term.png)    ![Program Output](r1_plot.png)
+![Program Output](r2_term.png)    ![Program Output](r2_plot.png)
+![Program Output](r3_term.png)    ![Program Output](r3_plot.png)
+![Program Output](fin_term.png)    ![Program Output](fin_plot.png)
+
+
 
 ## Explaination of Approach
 Both functions require reading the graphs, finding the seller's prices, finding the buyer's valuations, and turning this into a matrix (2D array) to make it easier to track and find each buyer's preferred match.
@@ -40,4 +49,14 @@ Both functions require reading the graphs, finding the seller's prices, finding 
 
 - '--interactive': The purpose of this function is to show the proof behind the result of the final graph. This is similiar to the calculations and work we did in class for examples.
 
-    --interactive is similiar to --plot because it does show the seller's prices, the buyer's payoffs, and the edges list. However, instead of giving the end result, it prints out the calculations and asks the user if they wish to continue.
+    Demonstrates the algorithm step-by-step, mirroring the calculations we worked through manually.
+At each round, the program prints:
+
+    Seller prices
+
+    Buyer valuations and payoffs
+
+    The current preferred edges and matching
+
+    Constricted sets (if any)
+    Then it asks the user whether to continue to the next round.
