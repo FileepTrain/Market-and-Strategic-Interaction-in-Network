@@ -94,68 +94,77 @@ def main():
     parser = build_parser()
     args = parser.parse_args()
 
-    G = None            # local graph variable -> all functions
-
-    #Ensure the paths (input and output end with .gml)
+    # --- Validate input file ---
+    from pathlib import Path
     if args.input and not args.input.endswith(".gml"):
         parser.error("Input file must be a .gml file")
-
-     #Ensure the file exists
-    from pathlib import Path
     if not Path(args.input).is_file():
-        parser.error(f"input file not found: {args.input}")
-        
+        parser.error(f"Input file not found: {args.input}")
+
     try:
         G = load_gml(args.input)
     except (nx.NetworkXError, ValueError, UnicodeDecodeError) as err:
         parser.error(f"Error reading {args.input}: {err}")
 
-    # Check if graph has nodes
     if G.number_of_nodes() == 0:
-        parser.error("graph has no nodes")
+        parser.error("Graph has no nodes")
     if G.number_of_edges() == 0:
-        parser.error("graph has no edges")
-        
+        parser.error("Graph has no edges")
+
+    # --- Default variables ---
     fig = None
-    
-    if args.plot:
-        valuations = get_valuations(G)
+
+    # ============================================================================================
+    # INTERACTIVE MODE (--interactive)
+    # ============================================================================================
+    if args.interactive:
         if fig is not None:
             plt.close(fig)
-        fig = draw_graph(G, title="Initial Bipartite Market Graph", buyer_payoffs=valuations)
-
-        try:
-            resp = input("\nProceed with INTERACTIVE clearing? [Enter = yes, n/q = no] ").strip().lower()
-        except EOFError:
-            resp = ""  # default to yes if stdin isn't interactive
-
-        if resp in {"", "y", "yes"}:
-            # Close the initial plot before starting the interactive loop
-            if fig is not None:
-                plt.close(fig)
-            run_interactive_clearing(
-                G,
-                price_step=1.0,
-                ask_each_round=True,
-                max_rounds=1000,
-                plot=True,           # keep plotting rounds
-            )
-            plt.ioff()
-            plt.show()
-            return
-
-    
-    if args.interactive:
-    # one call does everything: prints, prompts, price updates, recompute loop
-        if fig is not None:
-            plt.close(fig) 
         run_interactive_clearing(
-        G,
-        price_step=1.0,
-        ask_each_round=True,
-        max_rounds=1000,
-        plot=args.plot,   # use --plot flag to control drawing
+            G,
+            price_step=1,
+            ask_each_round=True,
+            max_rounds=1000,
+            plot=args.plot,   # only draw if user also used --plot
         )
+        plt.ioff()
+        plt.show()
+        return
+
+    # ============================================================================================
+    # PLOT-ONLY MODE (--plot but not --interactive)
+    # ============================================================================================
+    if args.plot and not args.interactive:
+        # Just compute to equilibrium, then draw final result
+        final_prices, payoffs_matrix, final_edges, buyers, preferred_edges = run_clearing_until_equilibrium(G)
+        fig = draw_graph(
+            G,
+            title="Final Bipartite Market Graph",
+            highlight_edges=preferred_edges,        # dashed red — preferred edges
+            highlight_edges_green=final_edges,      # solid green — final matching
+            seller_prices=final_prices,
+            buyer_payoffs=payoffs_matrix
+        )
+        plt.ioff()
+        plt.show()
+        return
+
+    # ============================================================================================
+    # DEFAULT MODE (no flags)
+    # ============================================================================================
+    if not args.plot and not args.interactive:
+        # Run non-plotting automatic clearing, print results to terminal only
+        final_prices, payoffs_matrix, final_edges, buyers = run_clearing_until_equilibrium(G)
+        print("\n✅ Market Clearing Complete (terminal-only mode)\n")
+        print("Final Prices:")
+        for s, p in zip(sorted([n for n, d in G.nodes(data=True) if d.get('bipartite') == 0], key=int), final_prices):
+            print(f"  Seller {s}: {p}")
+        print("\nFinal Matching Pairs:")
+        print(sorted(final_edges))
+        print("\nFinal Payoffs (buyers × sellers):")
+        for buyer, row in zip(buyers, payoffs_matrix):
+            print(f"  Buyer {buyer}: {row}")
+        return
         
 if __name__ == "__main__":
     main()
