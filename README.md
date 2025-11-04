@@ -18,20 +18,20 @@ Following functions fall under the OPTIONS category, and below details the retur
 
 ## Sample Command-Line Usage
     python market_strategy.py market.gml
-![Program Output](fin_term.png)
+![Program Output](images/fin_term.png)
     
     python market_strategy.py market.gml --plot
-![Program Output](fin_term.png)     ![Program Output](fin_plot.png)
+![Program Output](images/fin_term.png)     ![Program Output](images/fin_plot.png)
     
     python market_startegy.py market.gml --interactive
-![Program Output](r1_term.png)     ![Program Output](r2_term.png)
-![Program Output](r3_term.png)     ![Program Output](fin_term.png)
+![Program Output](images/r1_term.png)     ![Program Output](images/r2_term.png)
+![Program Output](images/r3_term.png)     ![Program Output](images/fin_term.png)
     
     python market_strategy.py market.gml --plot --interactive
-![Program Output](r1_term.png)    ![Program Output](r1_plot.png)
-![Program Output](r2_term.png)    ![Program Output](r2_plot.png)
-![Program Output](r3_term.png)    ![Program Output](r3_plot.png)
-![Program Output](fin_term.png)    ![Program Output](fin_plot.png)
+![Program Output](images/r1_term.png)    ![Program Output](images/r1_plot.png)
+![Program Output](images/r2_term.png)    ![Program Output](images/r2_plot.png)
+![Program Output](images/r3_term.png)    ![Program Output](images/r3_plot.png)
+![Program Output](images/fin_term.png)    ![Program Output](images/fin_plot.png)
 
 
 
